@@ -1,0 +1,50 @@
+This package provides a GUI to draw on a Canvas a revision tree
+extracted from the history log of any file archived with a VCS system
+based on RCS.
+
+This functionnality is available as a perl class
+(Puppet::VcsTools::History) or as a script (viewHistory).
+
+I'd like people who actually use this module for their application to
+drop me a short note about what they're using this module for. 
+
+Suggested DSLI line
+Puppet::VcsTools::History bdpO  Vcs history viewer  DDUMONT
+ 
+This module is in beta stage and was written with perl5.005. 
+
+See the embedded documentation in the module for more details.
+
+Comments and suggestions are always welcome.
+
+Note that this module is in alpha state. Its interface may change (but
+I hope not).
+
+Legal mumbo jumbo:
+
+ Copyright (c) 1998-1999 Dominique Dumont. All rights reserved.
+ This program is free software; you can redistribute it and/or
+ modify it under the same terms as Perl itself.
+ THIS PACKAGE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR
+ IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+ WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+ 
+
+ - Dominique Dumont
+   dominique_dumont@grenoble.hp.com
+
+---------------------------------------------------------------------
+INSTALLATION
+
+   	 gunzip -c <dist_file>.tar.gz | tar xvf -
+   	 cd <dist_directory>
+   	 perl Makefile.PL
+   	 make test          
+   	 make install
+
+
+
+
+
+
+

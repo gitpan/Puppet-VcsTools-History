@@ -11,7 +11,7 @@ use vars qw($VERSION);
 
 use AutoLoader qw/AUTOLOAD/ ;
 
-$VERSION = sprintf "%d.%03d", q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%03d", q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/;
 
 sub new
   {
@@ -323,16 +323,16 @@ sub createVersionObj
 sub getTreeGraph
   {
     my $self = shift ;
-    return undef unless defined $self->{widget};
+    return undef unless defined $self->{body}->myDisplay();
 
-    return  $self->{widget}->getSlave($self->{treeName}) ;
+    return  $self->{body}->myDisplay()->getSlave($self->{treeName}) ;
   }
 
 sub getInfoWidget
   {
     my $self = shift ;
-    return undef unless defined $self->{widget};
-    return  $self->{widget}->getSlave($self->{textName});
+    return undef unless defined $self->{body}->myDisplay();
+    return  $self->{body}->myDisplay()->getSlave($self->{textName});
   }
 
 
@@ -340,13 +340,12 @@ sub display
   {
     my $self = shift ;
 
-    my $top = $self->{body}->display(@_);
+    my $top = $self->{body}->display (@_);
 
     return unless defined $top;
  
     require Puppet::VcsTools::GraphWidget ;
 
-    $self->{widget}=$top ;
     $self->{treeName} = 'history graph';
     my $tree = $top ->newSlave
       (
@@ -498,7 +497,6 @@ sub display
 sub closeDisplay
   {
     my $self = shift ;
-    delete $self->{widget};
     $self->{body}->closeDisplay();
   }
   
@@ -508,9 +506,9 @@ sub showResult
   {
     my $self = shift ;
     
-    return unless defined $self->{widget};
+    return unless defined $self->{body}->myDisplay();
 
-    my $txt = $self->{widget}->getSlave($self->{textName}) ;
+    my $txt = $self->{body}->myDisplay()->getSlave($self->{textName}) ;
     $txt -> clear();
     my $ref =shift ;
     my $str = ref($ref) eq 'ARRAY' ? join("\n",@$ref) : $ref ;
@@ -523,8 +521,8 @@ sub drawTree
     my $self = shift ;
     my %args = @_ ;
 
-    return unless defined $self->{widget};
-    my $tree = $self->{widget}->getSlave($self->{treeName});
+    return unless defined $self->{body}->myDisplay();
+    my $tree = $self->{body}->myDisplay()->getSlave($self->{treeName});
     $self->{drawRoot}=$args{revision} || $args{nodeId} || $self->{drawRoot} ;
     return unless defined $self->{drawRoot};
 
@@ -538,8 +536,8 @@ sub addNewVersion
 
      my $obj = $self->SUPER::addNewVersion(@_);
 
-     return unless defined $self->{widget};
-     my $tree = $self->{widget}->getSlave($self->{treeName});
+     return unless defined $self->{body}->myDisplay();
+     my $tree = $self->{body}->myDisplay()->getSlave($self->{treeName});
      $tree->addRev($obj->getRevision()) ;
      
      $self->drawTree();
@@ -549,18 +547,18 @@ sub update
   {
     my $self = shift ;
     
-    if (defined $self->{widget})
+    if (defined $self->{body}->myDisplay())
       {
-        my $tree = $self->{widget}->getSlave($self->{treeName});
+        my $tree = $self->{body}->myDisplay()->getSlave($self->{treeName});
         $tree->Subwidget('graph')-> clear ;
         $tree->Subwidget('list')->delete(0,'end');
       } ;
     
     $self->SUPER::update(@_);
     
-    if (defined $self->{widget})
+    if (defined $self->{body}->myDisplay())
       {
-        my $tree = $self->{widget}->getSlave($self->{treeName});
+        my $tree = $self->{body}->myDisplay()->getSlave($self->{treeName});
         $tree->addRev(@{$self->{storage}->getDbInfo('versionList')}) ;
 
         $self->drawTree;

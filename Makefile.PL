@@ -4,7 +4,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile
   (
    'NAME'	   => 'Puppet-VcsTools-History',
-   'VERSION' => '1.002',
+   'VERSION' => '1.003',
    'EXE_FILES' => ['viewHistory'],
    'dist' => {COMPRESS=>'gzip -9f', SUFFIX => 'gz'},
    ($] >= 5.005 ?
@@ -20,6 +20,6 @@ WriteMakefile
     'MLDBM' => 0,
     'DB_File' =>0,
     'VcsTools::Version' => '1.004',
-    'VcsTools::History' => '1.004'
+    'VcsTools::History' => '1.005'
    }
   );

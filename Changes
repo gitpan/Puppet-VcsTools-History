@@ -1,4 +1,10 @@
-1999-07-23  Dominique Dumont  <domi@barrayar.grenoble.hp.com> v1.002
+v1.003 1999-08-20  Dominique Dumont  <domi@barrayar.grenoble.hp.com>
+
+	* lib/Puppet/VcsTools/History.pm: 
+	- bug fix related to keeping Tk widget in self->hashes. History 
+	kept references on ghost widgets.
+	 
+v1.002 1999-07-23  Dominique Dumont  <domi@barrayar.grenoble.hp.com>
 
 	* lib/Puppet/VcsTools/History.pm (new): 
 	- added show logs command on node

@@ -26,42 +26,6 @@ print "ok 1\n";
 # of the test code):
 package Dummy ;
 
-  my $bChangeData = ['none', 'cosmetic', 'minor','major'] ;
-  my $changeData = ['none', 'cosmetic', 'major'] ;
-  my @state = qw(Dead Exp Team Lab Special Product) ;
-
-  # each entry is a hash made of 
-  # - name : name of the field stored in log
-  # - var : variable name used in internal hash (default = name) 
-  # - type : is line, enum or array or text
-  # - values : possible values of enum type
-  # - mode : specifies if the value can be modified (r|w) (default 'w')
-  # - pile : define how to pile the data when building a log resume.
-  # - help : help string
-  
-my $logDataFormat = 
-    [
-     { 'name' => 'state', 'type' => 'enum',  'values' => \@state},
-     { 'name' => 'date', 'type' => 'line', 'mode' => 'r' },
-     { 'name' => 'merged from', 'type' => 'line','var' => 'mergedFrom' },
-     { 'name' => 'comes from', 'type' => 'line','var' => 'previous', 
-       'help' => 'enter a version if it cannot be figured out by the tool' },
-     { 'name' => 'equal to', 'type' => 'line','var' => 'equalTo','type' => 'array' },
-     # will fit better in the description field TBD
-     #   { 'name' => 'visibility', 'values' => ['none', 'team', 'lab','client']},
-     { 'name' => 'writer','type' => 'line', 'mode' => 'r' },
-     { 'name' => 'keywords', 'type' => 'array', 'pile' => 'push' },
-     { 'name' => 'fix','type' => 'array','pile' => 'push',
-       'help' => 'enter number a la GREhp01243' },
-     { 'name' => 'behavior change' , 'type' => 'enum','var' => 'behaviorChange',
-       'values' => $bChangeData },
-     { 'name' => 'interface change' , 'type' => 'enum','var' => 'interfaceChange',
-       'values' => $changeData },
-     { 'name' => 'inter-peer change' , 'type' => 'enum','var' => 'interPeerChange',
-       'values' => $changeData },
-     { 'name' => 'misc' , 'var' => 'log', 'type' => 'text', 'pile' => 'concat'}
-  ];
-
 sub new 
   {
     my $type = shift ;
@@ -90,18 +54,21 @@ sub display
 
     $self->{tree} = $tree;
 
+    
+    Puppet::Storage->dbHash($self->{dbHash});
+    Puppet::Storage->keyRoot('version');
     my @v_new=  (
-                 storageArgs =>
-                 {
-                  keyRoot => 'version',
-                  dbHash => $self->{dbHash}
-                 },
                  topTk => $self->{topTk},
-                 manager => $self
+                 getBrotherSub => sub 
+                 {
+                   my $rev = shift ;
+                   return $self->{version}{$rev} ;
+                 }
                 ) ;
 
     my %info = (
                 'log' => "Nothing to tell\n",
+                author => 'Ace Ventura',
                 keywords => [qw/salut les copains/],
                 date => '23/03/98'
                );
@@ -114,7 +81,7 @@ sub display
                      if (defined @revs and scalar(@revs) == 2)
                        {
                          my $rev = shift @revs;
-                         my $anc = $self->getVersionObj($rev)->
+                         my $anc = $self->{version}{$rev}->
                            findAncestor(shift @revs);
                          # must set color of ancestor node TBD
                          $tree->setNode(nodeId => $anc,color => 'brown');
@@ -133,7 +100,7 @@ sub display
                      if (defined @revs and scalar(@revs) == 1)
                        {
                          my $rev = shift @revs;
-                         my $anc = $self->getVersionObj($rev)->
+                         my $anc = $self->{version}{$rev}->
                            findOldest();
                          # must set color of ancestor node TBD
                          $tree->setNode(nodeId => $anc,color =>'yellow');
@@ -155,8 +122,13 @@ sub display
             # warn "making version $v\n";
             my $name = 'v'.$v ;
             $self->{version}{$v} = 
-              new Puppet::VcsTools::Version (name => $name,
-                                     @v_new,revision => $v) ;
+              new Puppet::VcsTools::Version 
+                (
+                 name => $name,
+                 @v_new,
+                 storage => new Puppet::Storage(name => $name) ,
+                 revision => $v
+                ) ;
             $self->{body}->acquire(body => $self->{version}{$v}->body());
 
             $tree->addRev($v) ;
@@ -205,22 +177,12 @@ sub display
        sub  {
          my $item = shift ;
          my $name = $item->get ('active') ;
-         $self->getVersionObj($name)->body()->display() ;
+         $self->{version}{$name}->body()->display() ;
        }
       );
     
   }
 
-sub getVersionObj
-  {
-    my $self = shift ;
-    my $rev = shift ;
-    if (defined $self->{version}{$rev})
-      {
-        return $self->{version}{$rev} ;
-      }
-    return undef ;
-  }
 
 package main ;
 

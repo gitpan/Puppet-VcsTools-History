@@ -2,7 +2,7 @@
 
 # read a STDIN string containing a RCS based history
 
-$VERSION = sprintf "%d.%03d", q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%03d", q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/;
 
 use Tk ;
 use ExtUtils::testlib;
@@ -31,6 +31,10 @@ elsif ($type eq 'tnd')
     require  VcsTools::DataSpec::HpTnd ;
     import VcsTools::DataSpec::HpTnd qw($description readHook);
   }
+else
+  {
+    die "unknown type. Must be 'tnd' or 'rcs'\n";
+  }
 
 my $ds = new VcsTools::LogParser
   (
@@ -41,13 +45,12 @@ my $ds = new VcsTools::LogParser
 my $mw = MainWindow-> new ;
 $mw -> withdraw ;
 
+Puppet::Storage->dbHash(\%dummy);
+Puppet::Storage->keyRoot('R');
+
 my $hist = new Puppet::VcsTools::History 
   (
-   storageArgs =>
-   {
-    dbHash => \%dummy,
-    keyRoot => 'R'
-   },
+   storage => new Puppet::Storage(name => 'file') ,
    'topTk' => $mw,
    name => 'file',
 #   how => 'warn',

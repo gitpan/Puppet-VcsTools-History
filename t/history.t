@@ -53,13 +53,12 @@ my $how = $trace ? 'warn' : undef ;
 
 print "ok ",$idx++,"\n";
 
+Puppet::Storage->dbHash(\%dbhash);
+Puppet::Storage->keyRoot('history root');
+
 my $hist = new Puppet::VcsTools::History 
   (
-   storageArgs =>
-   {
-    dbHash => \%dbhash,
-    keyRoot => 'history root'
-   },
+   storage => new Puppet::Storage(name => 'History test') ,
    'topTk' => $mw,
    name => 'History test',
    dataScanner => $ds ,

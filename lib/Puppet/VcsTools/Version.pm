@@ -1,11 +1,12 @@
 package Puppet::VcsTools::Version ;
 
 use strict;
+use Carp;
 use vars qw(@ISA $VERSION);
 use Puppet::Show ;
 use VcsTools::Version ;
 
-$VERSION = sprintf "%d.%03d", q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%03d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/;
 
 @ISA=qw/VcsTools::Version/;
 
@@ -20,28 +21,42 @@ sub new
 
     $self->{body} = new Puppet::Show(cloth => $self, @_);
     
-    my %storeArgs = %{$args{storageArgs}};
-    croak ("No storageArgs defined for VcsTools::Version $self->{name}\n")
-      unless defined %storeArgs;
-    
-    my $usage = $self->{usage} = $args{usage} || 'File';
-    
-    if ($usage eq 'MySql')
+    if (defined $args{storageArgs})
       {
-        $storeArgs{version} = $args{revision};
-        require VcsTools::VerSqlStorage;
-        $self->{storage} = new VcsTools::VerSqlStorage (%storeArgs) ;
-      }
-    else
+        # transition code, should be removed sooner or later
+        my %storeArgs = %{$args{storageArgs}} ;
+        carp "new $type $args{name}: storageArgs is deprecated";
+        carp "new $type $args{name}: usage is deprecated" 
+          if defined $args{usage};
+ 
+        my $usage = $self->{usage} = $args{usage} || 'File';
+        
+        if ($usage eq 'MySql')
+          {
+            $storeArgs{version} = $args{revision};
+            require VcsTools::VerSqlStorage;
+            $args{storage} = new VcsTools::VerSqlStorage (%storeArgs) ;
+          }
+        else
+          {
+            $args{storage} =  new Puppet::Storage (name => $self->{name},
+                                                     %storeArgs) ;
+          }
+         $self->{storageArgs}=$args{storageArgs};
+     }
+
+    if (defined $args{manager})
       {
-        $self->{storage} =  new Puppet::Storage (name => $self->{name},
-                                                 %storeArgs) ;
+        carp "new $type $args{name}: manager is deprecated";
+        my $mgr = $args{manager} ;
+        $args{getBrotherSub} = sub {$mgr->getVersionObj(@_)} ;
+        $self->{manager}=$args{manager};
       }
-    
+
     # mandatory parameter
-    foreach (qw/revision manager/)
+    foreach (qw/revision getBrotherSub storage/)
       {
-        die "No $_ passed to Puppet::VcsTools::Version $self->{name}\n" unless 
+        die "No $_ passed to $type $self->{name}\n" unless 
           defined $args{$_};
         $self->{$_} = delete $args{$_} ;
       }
@@ -51,6 +66,13 @@ sub new
     bless $self,$type ;
   }
 
+sub getVersionObj
+  {
+    my $self = shift ;
+    my $rev = shift ;
+    carp "Version::getVersionObj is deprecated";
+    return $self->{getBrotherSub}->($rev);
+  }
 
 
 sub display
@@ -126,7 +148,7 @@ sub drawSubTree
            yref => \$ly
           );
 
-        $self->{manager}->getVersionObj($info->{lower}) 
+        $self->{getBrotherSub}->($info->{lower}) 
           ->drawSubTree($tree, $lx, $ly, $widthR );
       }
     
@@ -145,7 +167,7 @@ sub drawSubTree
                deltaXref => $widthR
               );
 
-            $self->{manager}->getVersionObj($branch)
+            $self->{getBrotherSub}->($branch)
               ->drawSubTree($tree, $lx ,$ly, \$subWidth );
             $$widthR += $subWidth ;
           }
@@ -197,7 +219,7 @@ constructor.
 
 =head2 new(...)
 
-Parameters are those of L<Puppet::VcsTools::Version/"new()"> plus:
+Parameters are those of L<VcsTools::Version/"new()"> plus:
 
 =over 4
 

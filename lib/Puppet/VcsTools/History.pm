@@ -11,7 +11,7 @@ use vars qw($VERSION);
 
 use AutoLoader qw/AUTOLOAD/ ;
 
-$VERSION = sprintf "%d.%03d", q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%03d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/;
 
 sub new
   {
@@ -29,34 +29,47 @@ sub new
        @_
       ) ;
 
-    my %storeArgs = %{$args{storageArgs}} ;
-    
-    croak "No storageArgs defined for VcsTools::History $self->{name}\n"
-      unless defined %storeArgs;
-
-    $self->{storageArgs} = \%storeArgs;
-
     my $usage = $self->{usage} = $args{usage} || 'File' ;
-    if ($usage eq 'MySql')
+
+    #carp "new $type $args{name}: usage is deprecated" 
+    #  if defined $args{usage};
+
+    # we can't deprecate usage until the version list problem is
+    # sorted.  version list is stored in the DB_file, while the SQL
+    # interface rebuilds it. This leads to 2 different behaviors,
+    # hence the usage parameter.  The solution could be to re-build
+    # the version list from the keys of the DB_File even though this
+    # is not efficient.
+
+    # then again ,there's the problem of the historyUpdateTime ...
+
+    if (defined $args{storageArgs})
       {
-        require VcsTools::HistSqlStorage;
-        $self->{storage} = new VcsTools::HistSqlStorage (%storeArgs) ;
+        # transition code, should be removed sooner or later
+        my %storeArgs = %{$args{storageArgs}} ;
+        carp "new $type $args{name}: storageArgs is deprecated";
+        if ($usage eq 'MySql')
+          {
+            require VcsTools::HistSqlStorage;
+            $args{storage} = new VcsTools::HistSqlStorage (%storeArgs) ;
+          }
+        else
+          {
+            $args{storage} =  new Puppet::Storage (name => $self->{name},
+                                                   %storeArgs) ;
+          }
+        $self->{storageArgs}=$args{storageArgs};
       }
-    else
-      {
-        $self->{storage} =  new Puppet::Storage (name => $self->{name},
-                                                 %storeArgs) ;
-      }
+
 
     # mandatory parameter
-    foreach (qw/name dataScanner topTk/)
+    foreach (qw/name dataScanner topTk storage/)
       {
         croak "No $_ passed to $self->{name}\n" unless 
           defined $args{$_};
         $self->{$_} = delete $args{$_} ;
       }
 
-    $self->{storageArgs}{keyRoot} .= ' '.$self->{name} ;
     bless $self,$type ;
   }
 
@@ -306,16 +319,21 @@ sub createVersionObj
 
     $self->{body}->printDebug("Creating puppet version object for rev $rev\n");
     
+    my @store = defined $self->{storageArgs} ? 
+      (storageArgs => $self->{storageArgs}) :
+      (storage => $self->{storage} -> child(name => $rev)) ;
+
     return new Puppet::VcsTools::Version  
       (
        name => $rev,
        title => "$self->{name} v$rev",
        topTk => $self->{topTk},
        dataFormat => $self->{dataScanner}->getDescription,
-       manager => $self,
-       managerName => $self->{name},
-       storageArgs => $self->{storageArgs},
        usage => $self->{usage},
+       # this closure could be improved for performance with a cache
+       # but the cleanup of cached versions object can be a problem
+       getBrotherSub => sub{$self->getVersionObj(@_);},
+       @store,
        revision => $rev
       ) ;
   }

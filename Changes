@@ -1,3 +1,9 @@
+v1.004 1999-10-11  Dominique Dumont  <domi@barrayar.grenoble.hp.com>
+
+	* Puppet/VcsTools/History.pm: 
+	- modified call to Version constructor to use the new translucent 
+	attributes of Version
+
 v1.003 1999-08-20  Dominique Dumont  <domi@barrayar.grenoble.hp.com>
 
 	* lib/Puppet/VcsTools/History.pm: 

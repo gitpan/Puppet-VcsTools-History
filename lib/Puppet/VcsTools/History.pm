@@ -11,7 +11,7 @@ use vars qw($VERSION);
 
 use AutoLoader qw/AUTOLOAD/ ;
 
-$VERSION = sprintf "%d.%03d", q$Revision: 1.1 $ =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%03d", q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/;
 
 sub new
   {
@@ -19,6 +19,7 @@ sub new
     my %args = @_ ;
 
     my $self = {};
+    $self->{name}=$args{name};
 
     $self->{body} = new Puppet::Show
       (
@@ -43,7 +44,8 @@ sub new
       }
     else
       {
-        $self->{storage} =  new Puppet::Storage (%storeArgs) ;
+        $self->{storage} =  new Puppet::Storage (name => $self->{name},
+                                                 %storeArgs) ;
       }
 
     # mandatory parameter
@@ -402,14 +404,15 @@ sub display
     my $showLog = sub 
       {
         my %args = @_ ;
-        my $str = $self->getLog(version => $args{to}, key => 'log');
+        my $str = $self->getLog(version => $args{to} || $args{nodeId}, 
+                                key => 'log');
         $self->showResult($str) ;
       } ;
     
     my $showFullLog = sub 
       {
         my %args = @_ ;
-        my $str = $self->getLog(version => $args{to});
+        my $str = $self->getLog(version => $args{to}|| $args{nodeId});
         $self->showResult($str) ;
       } ;
     
@@ -430,6 +433,20 @@ sub display
     $tree->command 
       (
        on => 'arrow', 
+       label => 'show full log', 
+       command => $showFullLog
+      ) ;
+    
+    $tree->command 
+      (
+       on => 'node', 
+       label => 'show log', 
+       command => $showLog
+      ) ;
+
+    $tree->command 
+      (
+       on => 'node', 
        label => 'show full log', 
        command => $showFullLog
       ) ;

@@ -1,6 +1,7 @@
 package Puppet::VcsTools::GraphWidget ;
 
 use strict;
+use Sort::Versions ;
 require Tk::Derived;
 require Tk::Frame;
 
@@ -8,7 +9,7 @@ use vars qw(@ISA $printCmd $defaultPrintCmd $VERSION);
 
 @ISA = qw(Tk::Derived Tk::Frame);
 
-$VERSION = sprintf "%d.%03d", q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%03d", q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/;
 
 # Items to export into callers namespace by default. Note: do not export
 # names by default without a very good reason. Use EXPORT_OK instead.
@@ -113,18 +114,12 @@ sub addRev
     my $cw = shift ;
     my $l = $cw->Subwidget('list') ;
     
-    foreach my $rev (@_)
-      {
-        my @full = $l -> get (0, 'end') ;
-        my $index = 0;
-        foreach (@full)
-          {
-            return if ($_ eq $rev) ; 
-            last if ($_ gt $rev);
-            $index++;
-          } 
+    my @full = $l -> get (0, 'end') ;
+    $l -> delete (0, 'end') ;
 
-        $l->insert($index,$rev) ;
+    foreach my $rev (sort {versioncmp $a,$b } (@_,@full))
+      {
+        $l->insert('end',$rev) ;
       }
   }
 

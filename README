@@ -1,6 +1,9 @@
-This package provides a GUI to draw on a Canvas a revision tree
-extracted from the history log of any file archived with a VCS system
-based on RCS.
+This package provides a GUI to draw on a Canvas a revision tree which
+is extracted automatically from the history log of any file archived
+with a VCS system based on RCS.
+
+The revision tree features key bindings to read the log informations
+from the tree drawing .
 
 This functionnality is available as a perl class
 (Puppet::VcsTools::History) or as a script (viewHistory).

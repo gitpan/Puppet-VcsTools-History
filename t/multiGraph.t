@@ -38,8 +38,7 @@ my $wmgr = $mw -> MultiManager ( 'title' => 'log test' ,
                              'menu' => $w_menu ) 
   -> pack (qw/expand 1 fill both/);
 
-my $tg = $wmgr -> newSlave('type'=>'MultiVcsGraph', title => 'graph try',
-                         'list' => [1 .. 5]) ;
+my $tg = $wmgr -> newSlave('type'=>'MultiVcsGraph', title => 'graph try') ;
 print "ok ",$idx++,"\n";
 
 $tg -> addLabel (text => 'Looks like a VCS revision tree (hint hint)');
@@ -230,7 +229,7 @@ $tg->nodeBind(button => '<3>', color => 'green',
 
 print "ok ",$idx++,"\n";
 
-$tg->addRev(qw/1.1 1.2 1.4 1.3 1.0.2.1 1.0.2.3 1.0.2.2/);
+$tg->addRev(qw/1.0 1.1 1.2 1.4 1.3 1.0.2.1 1.0.2.3 1.0.2.2/);
 print "ok ",$idx++,"\n";
 
 MainLoop ; # Tk's

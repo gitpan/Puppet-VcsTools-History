@@ -5,7 +5,7 @@ use vars qw(@ISA $VERSION);
 use Puppet::Show ;
 use VcsTools::Version ;
 
-$VERSION = sprintf "%d.%03d", q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%03d", q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/;
 
 @ISA=qw/VcsTools::Version/;
 
@@ -16,6 +16,7 @@ sub new
     my %args = @_;
 
     my $self = {};
+    $self->{name}=$args{name};
 
     $self->{body} = new Puppet::Show(cloth => $self, @_);
     
@@ -23,9 +24,6 @@ sub new
     croak ("No storageArgs defined for VcsTools::Version $self->{name}\n")
       unless defined %storeArgs;
     
-    #personalization of the key root
-    $storeArgs{keyRoot} .= $args{revision};
-
     my $usage = $self->{usage} = $args{usage} || 'File';
     
     if ($usage eq 'MySql')
@@ -36,7 +34,8 @@ sub new
       }
     else
       {
-        $self->{storage} =  new Puppet::Storage (%storeArgs) ;
+        $self->{storage} =  new Puppet::Storage (name => $self->{name},
+                                                 %storeArgs) ;
       }
     
     # mandatory parameter
